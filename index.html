@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ELIO | Automation Engineering</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html, body{ overflow-x:hidden; }
+
+body{
+  --bg-base:#0a0a18; --ink:#f4f3ff; --ink-dim:rgba(244,243,255,0.62);
+  --glass:rgba(255,255,255,0.07); --glass-2:rgba(255,255,255,0.12); --glass-border:rgba(255,255,255,0.16);
+  --accent-a:#8b5cf6; --accent-b:#ec4899; --accent-c:#22d3ee;
+  background:var(--bg-base); min-height:100vh; width:100%; font-family:'Outfit', sans-serif; color:var(--ink); position:relative;
+}
+
+.blob{ position:fixed; border-radius:50%; filter:blur(90px); opacity:0.55; z-index:0; pointer-events:none; }
+.blob-1{ width:420px; height:420px; background:radial-gradient(circle, var(--accent-a), transparent 70%); top:-120px; left:-100px; animation:float1 16s ease-in-out infinite alternate; }
+.blob-2{ width:380px; height:380px; background:radial-gradient(circle, var(--accent-b), transparent 70%); top:30%; right:-140px; animation:float2 20s ease-in-out infinite alternate; }
+.blob-3{ width:360px; height:360px; background:radial-gradient(circle, var(--accent-c), transparent 70%); bottom:-140px; left:10%; animation:float3 18s ease-in-out infinite alternate; }
+@keyframes float1{ from{ transform:translate(0,0) scale(1); } to{ transform:translate(60px,50px) scale(1.15); } }
+@keyframes float2{ from{ transform:translate(0,0) scale(1); } to{ transform:translate(-50px,60px) scale(1.1); } }
+@keyframes float3{ from{ transform:translate(0,0) scale(1); } to{ transform:translate(40px,-40px) scale(1.12); } }
+
+.particles-container { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.particle { position: absolute; width: 4px; height: 4px; background: var(--accent-c); border-radius: 50%; opacity: 0; animation: floatUp 8s infinite linear; box-shadow: 0 0 8px var(--accent-c); }
+.particle:nth-child(1) { left: 15%; top: 80%; animation-duration: 7s; animation-delay: 0s; }
+.particle:nth-child(2) { left: 85%; top: 90%; animation-duration: 9s; animation-delay: 2s; }
+.particle:nth-child(3) { left: 50%; top: 85%; animation-duration: 6s; animation-delay: 4s; background: var(--accent-a); box-shadow: 0 0 8px var(--accent-a); }
+.particle:nth-child(4) { left: 30%; top: 95%; animation-duration: 10s; animation-delay: 1s; }
+@keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 20% { opacity: 0.8; } 80% { opacity: 0.8; } 100% { transform: translateY(-400px) scale(0); opacity: 0; } }
+
+/* 2 Nút nổi cố định ở HAI GÓC TRÊN CÙNG */
+.floating-dock-top {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 999;
+  pointer-events: none;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.float-action-btn {
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border-radius: 99px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.float-action-btn svg { width: 15px; height: 15px; color: #fff; }
+.float-action-btn:hover {
+  transform: translateY(3px) scale(1.05);
+  filter: brightness(1.15);
+}
+
+/* Hiệu ứng màu sắc nút Lưu danh bạ (Góc trái) */
+#saveContactBtnTop {
+  background: linear-gradient(135deg, var(--accent-c), #3b82f6);
+  box-shadow: 0 4px 15px rgba(34,211,238,0.4);
+  animation: pulse-glow-cyan 2.5s infinite alternate;
+}
+/* Hiệu ứng màu sắc nút Chia sẻ (Góc phải) */
+#shareBtnTop {
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  box-shadow: 0 4px 15px rgba(139,92,246,0.4);
+  animation: pulse-glow-purple 2.5s infinite alternate;
+}
+
+@keyframes pulse-glow-cyan {
+  0% { box-shadow: 0 4px 12px rgba(34,211,238,0.4); }
+  100% { box-shadow: 0 4px 22px rgba(34,211,238,0.8); }
+}
+@keyframes pulse-glow-purple {
+  0% { box-shadow: 0 4px 12px rgba(139,92,246,0.4); }
+  100% { box-shadow: 0 4px 22px rgba(236,72,153,0.8); }
+}
+
+.cover-wrap{ position:relative; z-index:1; max-width:440px; margin:20px auto 0; padding:0 20px; }
+.cover{ position:relative; width:100%; aspect-ratio:16/10; overflow:hidden; border-radius:34px; background:var(--glass) center/cover no-repeat; border:1px solid var(--glass-border); box-shadow:0 20px 50px -20px rgba(0,0,0,0.6); opacity:0; animation:coverIn 0.9s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes coverIn{ from{ opacity:0; transform:scale(0.94) translateY(-10px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+.cover-placeholder{ position:absolute; inset:0; background: radial-gradient(circle at 30% 25%, rgba(139,92,246,0.35) 0%, transparent 55%), radial-gradient(circle at 75% 70%, rgba(236,72,153,0.28) 0%, transparent 55%), radial-gradient(circle at 50% 100%, rgba(34,211,238,0.22) 0%, transparent 60%); }
+.cover-overlay{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,24,0.05) 0%, rgba(10,10,24,0.55) 100%); }
+
+.content{ position:relative; z-index:1; max-width:440px; margin:0 auto; padding:0 24px 80px; display:flex; flex-direction:column; align-items:center; }
+
+.avatar-ring{ position:relative; z-index:2; width:118px; height:118px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-top:-56px; opacity:0; animation:fadeUp 0.7s ease forwards 0.05s, floatY 4.5s ease-in-out infinite 0.9s; cursor: pointer; }
+@keyframes floatY{ 0%, 100%{ transform:translateY(0); } 50%{ transform:translateY(-7px); } }
+.avatar-ring::before{ content:""; position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-a)); animation:spin 8s linear infinite; opacity:0.9; filter:blur(0.5px); }
+.avatar{ position:relative; z-index:1; width:102px; height:102px; border-radius:50%; background:var(--bg-base) center/cover no-repeat; border:3px solid var(--bg-base); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.avatar-initial{ font-family:'Outfit', sans-serif; font-size:38px; font-weight:700; background:linear-gradient(135deg, var(--accent-a), var(--accent-c)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.name{ font-family:'Outfit', sans-serif; font-size:38px; font-weight:800; line-height:1.1; margin-top:18px; background:linear-gradient(90deg, var(--accent-a), var(--accent-b) 55%, var(--accent-c)); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.14s; }
+.fullname{ font-family:'Outfit', sans-serif; font-weight:500; font-size:15px; color:var(--ink-dim); margin-top:6px; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.2s; }
+.role-line{ font-size:13.5px; font-weight:600; color:var(--ink); margin-top:10px; text-align:center; }
+.org-line{ font-size:13px; color:var(--ink-dim); margin-top:2px; text-align:center; }
+
+.tagline{ margin-top:12px; font-size:13.5px; color:var(--ink-dim); text-align:center; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.24s; min-height: 20px;}
+.tagline-placeholder{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:rgba(244,243,255,0.32); }
+.typewriter-cursor { animation: blink 1s step-end infinite; color: var(--accent-c); font-weight: bold; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.quick-row{ display:flex; gap:14px; margin-top:20px; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.28s; }
+.quick-icon{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink); background:var(--glass); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid var(--glass-border); text-decoration:none; transition:transform 0.2s ease, background 0.2s ease; }
+.quick-icon:hover, .quick-icon:active{ transform:translateY(-3px); background:var(--glass-2); box-shadow: 0 4px 10px rgba(255,255,255,0.1); }
+.quick-icon svg{ width:16px; height:16px; }
+
+.hairline{ width:100%; height:1px; background:linear-gradient(90deg, transparent, var(--glass-border), transparent); margin:28px 0 24px; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.32s; }
+
+.contact-btn{ position:relative; overflow:hidden; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:15px 18px; margin-bottom:12px; border-radius:20px; background:linear-gradient(120deg, var(--accent-a), var(--accent-b)); color:#fff; font-weight:600; font-size:14.5px; text-decoration:none; letter-spacing:0.1px; box-shadow:0 12px 28px -12px rgba(139,92,246,0.55); opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.36s; transition:transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease; cursor: pointer; border: none; }
+.contact-btn::after{ content:""; position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent); transform:skewX(-20deg); transition:left 0.6s ease; }
+.contact-btn:hover::after, .contact-btn:active::after{ left:130%; }
+.contact-btn:active{ transform:scale(0.98); }
+.contact-btn:hover{ transform:translateY(-2px); filter:brightness(1.08); }
+.contact-btn:hover .contact-arrow{ transform:translate(2px,-2px); }
+.contact-btn svg{ width:16px; height:16px; }
+.contact-arrow{ transition:transform 0.25s ease; width:14px; height:14px; }
+
+.info-rows{ width:100%; background:var(--glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid var(--glass-border); border-radius:20px; margin-bottom:28px; overflow:hidden; opacity:0; animation:fadeUp 0.7s ease forwards; animation-delay:0.4s; }
+.info-row{ display:flex; align-items:center; gap:13px; width:100%; padding:14px 18px; text-decoration:none; color:var(--ink); border-bottom:1px solid var(--glass-border); transition:background 0.2s ease; cursor:pointer;}
+.info-row:last-child{ border-bottom:none; }
+.info-row:hover, .info-row:active{ background:rgba(255,255,255,0.06); }
+.info-icon{ width:28px; height:28px; border-radius:9px; background:transparent; color:var(--accent-c); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.info-icon svg{ width:15px; height:15px; }
+.info-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-dim); margin-bottom:2px; }
+.info-value{ font-size:13.5px; font-weight:500; }
+
+.links{ width:100%; display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+.link-pill{ position:relative; overflow:hidden; display:flex; align-items:center; gap:14px; width:100%; padding:15px 18px; border-radius:22px; background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--glass-border); text-decoration:none; color:var(--ink); font-family:'Outfit', sans-serif; font-size:15.5px; font-weight:600; opacity:0; animation:fadeUp 0.6s ease forwards; transition:transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.link-pill::after{ content:""; position:absolute; top:0; left:-60%; width:35%; height:100%; background:linear-gradient(120deg, transparent, rgba(255,255,255,0.18), transparent); transform:skewX(-20deg); transition:left 0.6s ease; }
+.link-pill:hover::after, .link-pill:active::after{ left:130%; }
+.link-pill:hover{ transform:translateY(-3px) scale(1.01); background:var(--glass-2); box-shadow:0 12px 28px -12px var(--pill-glow, rgba(139,92,246,0.5)); border-color: var(--pill-glow, rgba(255,255,255,0.3)); }
+.link-pill:active{ transform:scale(0.98); background:var(--glass-2); }
+.pill-icon{ width:38px; height:38px; border-radius:12px; background:var(--pill-color, linear-gradient(135deg, rgba(139,92,246,0.35), rgba(34,211,238,0.35))); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform 0.2s ease; }
+.pill-icon svg{ width:19px; height:19px; }
+.link-pill:hover .pill-icon, .link-pill:active .pill-icon{ transform:scale(1.08) rotate(-4deg); }
+.pill-text-icon{ font-size:13px; font-weight:800; font-family:'Outfit',sans-serif; }
+.pill-label{ flex:1; }
+.pill-arrow{ color:var(--ink-dim); opacity:0; transform:translate(-2px,2px); transition:opacity 0.2s ease, transform 0.2s ease; width:14px; height:14px; }
+.pill-arrow svg { width: 14px; height: 14px; }
+.link-pill:hover .pill-arrow, .link-pill:active .pill-arrow{ opacity:1; transform:translate(0,0); color:var(--accent-c); }
+
+.feature-heading{ font-family:'Outfit', sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:2px; color:var(--accent-c); margin: 0 0 12px 10px; align-self: flex-start; font-weight:700;}
+.feature-card{ display:flex; align-items:center; gap:14px; width:100%; padding:14px 16px; border-radius:22px; background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--glass-border); text-decoration:none; color:var(--ink); transition:transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor:pointer;}
+.feature-card:hover, .feature-card:active{ transform:translateY(-3px) scale(1.01); background:var(--glass-2); box-shadow:0 10px 25px -10px rgba(34,211,238,0.3); border-color:rgba(34,211,238,0.4); }
+.feature-card:active{ transform:scale(0.98); }
+.feature-thumb{ width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, var(--accent-a), var(--accent-c)) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.feature-thumb svg{ width: 20px; height:20px; color:white; }
+.feature-title{ font-family:'Outfit', sans-serif; font-weight:700; font-size:14.5px; }
+.feature-sub{ margin-top:3px; font-size:12px; color:var(--ink-dim); line-height:1.35; }
+
+.bio-heading{ font-family:'Outfit', sans-serif; font-weight:700; font-size:13px; letter-spacing:2.5px; background:linear-gradient(90deg, var(--accent-a), var(--accent-c)); -webkit-background-clip:text; background-clip:text; color:transparent; text-align:center; margin:4px 0 18px; }
+.bio-card{ width:100%; background:var(--glass); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid var(--glass-border); border-radius:28px; padding:30px 24px; margin-bottom:28px; }
+.bio-line{ font-family:'Outfit', sans-serif; font-weight:400; font-size:15px; color:var(--ink); text-align:center; line-height:1.65; margin-bottom:18px; }
+.bio-quote{ font-family:'Outfit', sans-serif; font-weight:700; font-size:13px; letter-spacing:1.2px; background:linear-gradient(90deg, var(--accent-b), var(--accent-c)); -webkit-background-clip:text; background-clip:text; color:transparent; text-align:center; text-transform:uppercase; }
+
+.msg-heading{ font-family:'Outfit', sans-serif; font-weight:700; font-size:13px; letter-spacing:2.5px; background:linear-gradient(90deg, var(--accent-a), var(--accent-c)); -webkit-background-clip:text; background-clip:text; color:transparent; text-align:center; margin:4px 0 18px; }
+.contact-option-box { width: 100%; background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; margin-bottom: 16px; }
+.option-title { font-size: 14px; font-weight: 700; color: var(--accent-c); margin-bottom: 8px; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px; }
+.option-desc { font-size: 12.5px; color: var(--ink-dim); margin-bottom: 14px; line-height: 1.4; }
+.msg-input, .msg-textarea{ width:100%; padding:13px 16px; border-radius:14px; background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid var(--glass-border); color:var(--ink); font-family:'Outfit', sans-serif; font-size:14px; outline:none; transition:border-color 0.2s ease, background 0.2s ease; margin-bottom: 10px; }
+.msg-input:focus, .msg-textarea:focus{ border-color:var(--accent-a); background:var(--glass-2); }
+.msg-input::placeholder, .msg-textarea::placeholder{ color:var(--ink-dim); }
+.msg-textarea{ min-height:90px; resize:vertical; }
+
+.msg-submit{ position:relative; overflow:hidden; width:100%; padding:14px 18px; border-radius:14px; border:none; background:linear-gradient(120deg, var(--accent-a), var(--accent-b)); color:#fff; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(139,92,246,0.5); transition:transform 0.2s ease, filter 0.2s ease; text-decoration: none; display: flex; align-items: center; justify-content: center; text-align: center; }
+.msg-submit:hover{ transform:translateY(-2px); filter:brightness(1.08); }
+.msg-submit:active{ transform:scale(0.98); }
+
+.footer-note{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.5px; color:rgba(244,243,255,0.28); text-align: center; margin-top: 20px;}
+
+.modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); z-index:99; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:0.3s ease; padding: 20px; }
+.modal-overlay.active{ opacity:1; pointer-events:auto; }
+.modal-box{ background:var(--bg-base); border:1px solid var(--glass-border); border-radius:24px; padding:24px; max-width:400px; width:100%; transform:translateY(20px); transition:0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); position:relative; }
+.modal-overlay.active .modal-box{ transform:translateY(0); }
+.close-modal{ position:absolute; top:16px; right:16px; background:var(--glass); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;}
+.close-modal:hover{ background:var(--accent-b); transform:rotate(90deg);}
+.modal-content h3{ color:var(--accent-c); margin-bottom:10px; font-size:18px; font-family:'Outfit', sans-serif;}
+.modal-content p{ color:var(--ink-dim); font-size:14px; line-height:1.6; margin-bottom:15px; }
+
+.terminal-overlay { position:fixed; inset:0; background:#000; z-index:999; display:none; flex-direction:column; padding:20px; font-family:'JetBrains Mono', monospace; font-size:14px; color:#0f0; }
+.terminal-overlay.active { display:flex; }
+.terminal-line { margin-bottom: 5px; }
+
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.reveal{ opacity:0; transform:translateY(28px) scale(0.98); transition:opacity 0.7s cubic-bezier(.22,1,.36,1), transform 0.7s cubic-bezier(.22,1,.36,1); }
+.reveal.is-visible{ opacity:1; transform:translateY(0) scale(1); }
+
+@media (prefers-reduced-motion: reduce){
+  .blob, .avatar-ring::before, .particle, .cover, .name, .tagline, .quick-row, .hairline, .contact-btn, .info-rows, .link-pill { animation:none !important; opacity:1 !important; transform:none !important; }
+  .reveal{ opacity:1; transform:none; transition:none; }
+}
+@media (max-width:480px){ .content{ padding:0 18px 90px; } .cover-wrap{ padding:0 16px; } .name{ font-size:32px; } }
+</style>
+</head>
+<body>
+
+<!-- 2 NÚT NỔI Ở HAI GÓC TRÊN CÙNG -->
+<div class="floating-dock-top">
+  <!-- Góc trái: Lưu danh bạ -->
+  <a class="float-action-btn" id="saveContactBtnTop" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+    <span>Lưu bạ</span>
+  </a>
+  <!-- Góc phải: Chia sẻ -->
+  <button class="float-action-btn" id="shareBtnTop" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+    <span>Chia sẻ</span>
+  </button>
+</div>
+
+<div class="particles-container">
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+</div>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="terminal-overlay" id="terminal"><div id="term-content"></div></div>
+<div class="modal-overlay" id="projectModal">
+    <div class="modal-box">
+        <button class="close-modal" id="closeModal">✕</button>
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+</div>
+
+<div class="cover-wrap">
+  <header class="cover" id="cover">
+    <div class="cover-placeholder" id="coverPlaceholder"></div>
+    <div class="cover-overlay"></div>
+  </header>
+</div>
+
+<main class="content">
+  <div class="avatar-ring" id="avatarRing" title="Nhấp đúp thử xem!">
+    <div class="avatar" id="avatar"></div>
+  </div>
+
+  <h1 class="name" id="name"></h1>
+  <p class="fullname" id="fullname"></p>
+  <p class="role-line" id="roleLine"></p>
+  <p class="org-line" id="orgLine"></p>
+  <p class="tagline" id="tagline"></p>
+
+  <nav class="quick-row" id="quickRow"></nav>
+  <div class="hairline"></div>
+
+  <a class="contact-btn" id="contactBtn" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+    <span id="contactLabel"></span>
+    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><path d="M7 17 17 7M7 7h10v10"/></svg>
+  </a>
+
+  <div class="info-rows" id="infoRows"></div>
+  <div class="links" id="linksList"></div>
+
+  <h2 class="bio-heading reveal" id="bioHeading"></h2>
+  <div class="bio-card reveal" id="bioCard"></div>
+
+  <h2 class="msg-heading reveal">GỬI LỜI NHẮN</h2>
+  <button class="contact-btn reveal" id="toggleMsgBtn" style="background: linear-gradient(120deg, var(--accent-b), var(--accent-c)); margin-bottom: 24px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <span id="toggleMsgText">💬 Nhấn để để lại lời nhắn cho ELIO ▼</span>
+  </button>
+
+  <div id="msgOptionsContainer" style="display: none; flex-direction: column; gap: 15px; width: 100%; margin-bottom: 24px;">
+    <div class="contact-option-box">
+      <div class="option-title">✉️ Tùy chọn 1: Gửi qua ứng dụng Gmail</div>
+      <div class="option-desc">Nhập thông tin bên dưới, hệ thống sẽ mở Web Gmail (Máy tính) hoặc App Mail (Điện thoại) với nội dung soạn sẵn.</div>
+      <input class="msg-input" type="text" id="clientName" placeholder="Tên của bạn" />
+      <input class="msg-input" type="tel" id="clientPhone" placeholder="Số điện thoại của bạn" />
+      <textarea class="msg-textarea" id="clientMessage" placeholder="Nội dung lời nhắn của bạn..."></textarea>
+      <button class="msg-submit" type="button" id="openGmailBtn">Gửi Lời Nhắn Ngay</button>
+    </div>
+
+    <div class="contact-option-box">
+      <div class="option-title" style="color: var(--accent-b);">📝 Tùy chọn 2: Điền qua Google Docs / Form</div>
+      <div class="option-desc">Điền thông tin vào biểu mẫu trực tuyến để ELIO nhận thông báo trực tiếp.</div>
+      <a class="msg-submit" id="googleFormBtn" href="#" target="_blank" style="background: linear-gradient(120deg, var(--accent-b), var(--accent-a));">Mở biểu mẫu trực tuyến</a>
+    </div>
+  </div>
+
+  <p class="footer-note reveal" id="footerNote"></p>
+</main>
+
+<script>
+const CONFIG = {
+  coverUrl: "",
+  avatarUrl: "",
+  name: "ELIO",
+  fullName: "Nguyễn Đức Trí",
+  role: "", org: "",
+  tagline: "Automation Engineering Student ⚙️ | Tech & DIY Enthusiast",
+
+  contactInfo: [
+    { id: "email", type: "mail", label: "Email", value: "tringuyenduc408@gmail.com", url: "mailto:" },
+    { id: "phone", type: "phone", label: "Điện thoại", value: "0363526236", url: "tel:" }
+  ],
+
+  contact: { label: "Liên hệ", url: "mailto:tringuyenduc408@gmail.com" },
+  
+  quickContacts: [
+    { id: "mail", type: "mail", url: "mailto:tringuyenduc408@gmail.com" },
+    { id: "phone", type: "phone", url: "tel:0363526236" },
+  ],
+
+  projects: [
+    {
+      title: "Smart Door System", subtitle: "ESP8266, Optocouplers, Memory Limits",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M14 12h.01"/></svg>',
+      modalHtml: `<h3>Smart Door (ESP8266)</h3><p>Dự án cửa tự động sử dụng vi điều khiển ESP8266. Đã dùng Optocoupler để cách ly an toàn và tối ưu hóa mã nguồn.</p>`
+    },
+    {
+      title: "Mobile NAS Server", subtitle: "Smartphone tái chế & 180GB SSD",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>',
+      modalHtml: `<h3>NAS Cá nhân di động</h3><p>Tái chế smartphone cũ với SSD 180GB. Hỗ trợ SMB, WebDAV và mạng riêng ảo Tailscale.</p>`
+    }
+  ],
+
+  links: [
+    { id: "facebook", label: "Facebook", type: "facebook", url: "https://www.facebook.com/ngdtri206" },
+    { id: "zalo", label: "Zalo", type: "zalo", url: "https://zaloapp.com/qr/p/1durhc4pf8ygj" },
+    { id: "instagram", label: "Instagram", type: "instagram", url: "https://m.instagram.com/nguyenductri842" },
+    { id: "tiktok", label: "TikTok", type: "tiktok", url: "https://www.tiktok.com/@ductri0507?_r=1&_t=ZS-94k3y9gEhFp" },
+    { id: "telegram", label: "Telegram", type: "telegram", url: "#" },
+    { id: "github", label: "GitHub Source Code", type: "github", url: "#" }
+  ],
+
+  bioLines: [
+    "ELIO | 2006",
+    "Yêu công nghệ - thích khám phá - theo đuổi sự phát triển bản thân",
+    "MỖI NGÀY MỘT GHI CHÚ, TIẾN GẦN HƠN ĐẾN MỤC TIÊU LỚN",
+  ],
+
+  googleFormUrl: "#", 
+  footerNote: "designed with precision",
+};
+
+const ICONS = {
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  facebook: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18a4 4 0 1 0 4-4V2h3a5 5 0 0 0 5 5"/></svg>',
+  telegram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+  github: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>',
+  address: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+};
+
+const BRAND_COLORS = {
+  facebook: { color: "#1877f2", glow: "#1877f2" },
+  zalo: { color: "#0068ff", glow: "#0068ff" },
+  instagram: { color: "linear-gradient(135deg,#f58529,#dd2a7b,#8134af)", glow: "#dd2a7b" },
+  tiktok: { color: "#111111", glow: "#333333" },
+  telegram: { color: "#29a9eb", glow: "#29a9eb" },
+  github: { color: "#6e7681", glow: "#6e7681" }
+};
+
+function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
+
+function renderSite(cfg) {
+  const cover = document.getElementById("cover");
+  const coverPlaceholder = document.getElementById("coverPlaceholder");
+  if (cfg.coverUrl) { cover.style.backgroundImage = `url("${cfg.coverUrl}")`; coverPlaceholder.style.display = "none"; }
+  else { cover.style.backgroundImage = ""; coverPlaceholder.style.display = ""; }
+
+  const avatarEl = document.getElementById("avatar");
+  if (cfg.avatarUrl) { avatarEl.style.backgroundImage = `url("${cfg.avatarUrl}")`; avatarEl.innerHTML = ""; }
+  else { avatarEl.innerHTML = `<span class="avatar-initial">${cfg.name.charAt(0)}</span>`; }
+
+  document.getElementById("name").textContent = cfg.name;
+  document.getElementById("fullname").textContent = cfg.fullName;
+
+  const roleLine = document.getElementById("roleLine");
+  const orgLine = document.getElementById("orgLine");
+  roleLine.textContent = cfg.role || ""; roleLine.style.display = cfg.role ? "" : "none";
+  orgLine.textContent = cfg.org || ""; orgLine.style.display = cfg.org ? "" : "none";
+
+  const taglineEl = document.getElementById("tagline");
+  taglineEl.classList.remove("tagline-placeholder");
+  if (cfg.tagline) {
+    taglineEl.innerHTML = `<span id="typewriter-text"></span><span class="typewriter-cursor">|</span>`;
+    let idx = 0;
+    function type() { if (idx < cfg.tagline.length) { document.getElementById("typewriter-text").textContent += cfg.tagline.charAt(idx); idx++; setTimeout(type, 40); } }
+    setTimeout(type, 800);
+  } else { taglineEl.textContent = "// thêm tagline tại đây"; taglineEl.classList.add("tagline-placeholder"); }
+
+  // Các nút Contact Mini
+  const quickRow = document.getElementById("quickRow"); quickRow.innerHTML = "";
+  cfg.quickContacts.forEach((c) => {
+    const qEl = el(`<a class="quick-icon" href="${c.url}" target="_blank">${ICONS[c.type] || ICONS.mail}</a>`);
+    qEl.addEventListener("click", (e) => {
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      if (!isMobile && c.type === "mail") {
+        e.preventDefault();
+        const mailVal = cfg.contactInfo.find(i=>i.type==='mail')?.value || "";
+        try { navigator.clipboard.writeText(mailVal); } catch(err){}
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(mailVal)}&su=${encodeURIComponent('[LIÊN HỆ TỪ WEB BIO]')}`, '_blank');
+      } else if (!isMobile && c.type === "phone") {
+        e.preventDefault();
+        const pVal = cfg.contactInfo.find(i=>i.type==='phone')?.value || "";
+        try { navigator.clipboard.writeText(pVal); } catch(err){}
+        alert(`Đã sao chép số điện thoại (${pVal}) vào bộ nhớ đệm máy tính!`);
+      }
+    });
+    quickRow.appendChild(qEl);
+  });
+
+  // Nút liên hệ chính phía trên
+  const contactBtn = document.getElementById("contactBtn");
+  contactBtn.href = cfg.contact.url;
+  document.getElementById("contactLabel").textContent = cfg.contact.label;
+  contactBtn.addEventListener("click", (e) => {
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    if (!isMobile) {
+      e.preventDefault();
+      const mailVal = cfg.contactInfo.find(i=>i.type==='mail')?.value || "";
+      try { navigator.clipboard.writeText(mailVal); } catch(err){}
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(mailVal)}&su=${encodeURIComponent('[LIÊN HỆ TỪ WEB BIO]')}`, '_blank');
+    }
+  });
+
+  // Xử lý thông minh Email & Điện thoại
+  const infoRows = document.getElementById("infoRows"); infoRows.innerHTML = "";
+  (cfg.contactInfo || []).forEach((info) => {
+    if (!info.value) return;
+    const href = info.type === "address" ? "#" : `${info.url}${info.value}`;
+    const row = el(`
+      <a class="info-row" href="${href}" ${info.type === "address" ? 'onclick="return false" style="cursor:default"' : ''}>
+        <span class="info-icon">${ICONS[info.type] || ICONS.mail}</span>
+        <span>
+          <div class="info-label">${info.label}</div>
+          <div class="info-value">${info.value}</div>
+        </span>
+      </a>
+    `);
+    
+    if (info.type !== "address") {
+      row.addEventListener("click", (e) => {
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        try { navigator.clipboard.writeText(info.value); } catch(err){} 
+        
+        if (info.type === "mail") {
+          if (!isMobile) {
+            e.preventDefault();
+            const webGmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${info.value}&su=${encodeURIComponent('[LIÊN HỆ TỪ WEB BIO]')}`;
+            window.open(webGmailUrl, '_blank');
+          }
+        } else if (info.type === "phone") {
+          if (!isMobile) {
+            e.preventDefault();
+            alert(`Đã sao chép số điện thoại (${info.value}) vào bộ nhớ đệm máy tính!`);
+          }
+        }
+      });
+    }
+    infoRows.appendChild(row);
+  });
+
+  const linksList = document.getElementById("linksList"); linksList.innerHTML = "";
+
+  if (cfg.projects && cfg.projects.length > 0) {
+    linksList.appendChild(el(`<h2 class="feature-heading" style="margin-top: -10px;">Dự án kỹ thuật</h2>`));
+    cfg.projects.forEach((proj, i) => {
+      const card = el(`
+        <a class="feature-card" style="animation-delay:${0.06 * (i + 1)}s; opacity:0; animation:fadeUp 0.6s ease forwards;">
+          <div class="feature-thumb">${proj.icon || ''}</div>
+          <div><p class="feature-title">${proj.title}</p><p class="feature-sub">${proj.subtitle}</p></div>
+        </a>
+      `);
+      card.addEventListener("click", () => {
+        document.getElementById("modalContent").innerHTML = proj.modalHtml;
+        document.getElementById("projectModal").classList.add("active");
+      });
+      linksList.appendChild(card);
+    });
+    linksList.appendChild(el(`<h2 class="feature-heading" style="margin-top: 10px;">Kết nối</h2>`));
+  }
+
+  cfg.links.forEach((link, i) => {
+    const iconHtml = link.type === "zalo" ? `<span class="pill-text-icon">Zalo</span>` : (ICONS[link.type] || ICONS.arrow);
+    const b = BRAND_COLORS[link.type] || { color: "rgba(139,92,246,0.35)", glow: "rgba(139,92,246,0.5)" };
+    const brandStyle = `style="--pill-color:${b.color}; --pill-glow:${b.glow}; animation-delay:${0.06 * (i + 5)}s"`;
+    
+    linksList.appendChild(el(`
+      <a class="link-pill" href="${link.url}" ${brandStyle} target="_blank">
+        <span class="pill-icon">${iconHtml}</span><span class="pill-label">${link.label}</span>
+        <span class="pill-arrow">${ICONS.arrow}</span>
+      </a>
+    `));
+  });
+
+  document.getElementById("bioHeading").textContent = cfg.fullName.toUpperCase();
+  const bioCard = document.getElementById("bioCard"); bioCard.innerHTML = "";
+  cfg.bioLines.forEach((line, i) => {
+    const isLast = i === cfg.bioLines.length - 1;
+    bioCard.appendChild(el(`<p class="${isLast ? "bio-quote" : "bio-line"}">${line}</p>`));
+  });
+
+  document.getElementById("googleFormBtn").href = cfg.googleFormUrl;
+  document.getElementById("footerNote").textContent = cfg.footerNote;
+}
+renderSite(CONFIG);
+
+const toggleMsgBtn = document.getElementById("toggleMsgBtn");
+const msgOptionsContainer = document.getElementById("msgOptionsContainer");
+const toggleMsgText = document.getElementById("toggleMsgText");
+let isMsgOpen = false;
+
+toggleMsgBtn.addEventListener("click", () => {
+  isMsgOpen = !isMsgOpen;
+  if (isMsgOpen) {
+    msgOptionsContainer.style.display = "flex";
+    toggleMsgText.textContent = "💬 Thu gọn phần lời nhắn ▲";
+  } else {
+    msgOptionsContainer.style.display = "none";
+    toggleMsgText.textContent = "💬 Nhấn để để lại lời nhắn cho ELIO ▼";
+  }
+});
+
+// XỬ LÝ GỬI QUA GMAIL CHO CẢ MOBILE VÀ PC
+document.getElementById("openGmailBtn").addEventListener("click", () => {
+  const name = document.getElementById("clientName").value.trim();
+  const phone = document.getElementById("clientPhone").value.trim();
+  const message = document.getElementById("clientMessage").value.trim();
+
+  if (!name || !phone) {
+    alert("Vui lòng điền tên và số điện thoại của bạn trước khi gửi!");
+    return;
+  }
+
+  const recipient = "tringuyenduc408@gmail.com";
+  const subject = encodeURIComponent(`[KHÁCH HÀNG TỪ WEB BIO] - ${name}`);
+  const body = encodeURIComponent(`Chào ELIO,\n\nTôi có thông tin liên hệ từ trang Bio cá nhân của bạn:\n\n- Tên của tôi: ${name}\n- Số điện thoại của tôi: ${phone}\n- Lời nhắn của tôi: ${message}\n\n-----------------------------------------`);
+
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    // Trên điện thoại: Tự động gọi app Gmail / App Mail mặc định
+    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+  } else {
+    // Trên máy tính: Mở Web Gmail
+    const webGmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`;
+    window.open(webGmailUrl, '_blank');
+  }
+});
+
+document.getElementById("closeModal").addEventListener("click", () => document.getElementById("projectModal").classList.remove("active"));
+document.getElementById("projectModal").addEventListener("click", (e) => { if(e.target.id === "projectModal") e.target.classList.remove("active"); });
+
+const terminal = document.getElementById("terminal");
+const termContent = document.getElementById("term-content");
+const bootSequence = ["Initializing ELIO Core System v2.0...", "Loading Automation Modules [OK]", "Connecting to ESP8266 Smart Door... [ONLINE]", "Mounting Mobile NAS Drive... [180GB SSD DETECTED]", "Establishing SMB/WebDAV Tunnels... [OK]", "S7-1200 PLC Link: STANDBY", "System fully operational. Welcome back, Engineer.", "Press anywhere to exit terminal."];
+document.getElementById("avatarRing").addEventListener("dblclick", () => {
+  terminal.classList.add("active"); termContent.innerHTML = ""; let lineIdx = 0;
+  function printTerminal() { if (lineIdx < bootSequence.length) { termContent.innerHTML += `<div class="terminal-line">> ${bootSequence[lineIdx]}</div>`; lineIdx++; setTimeout(printTerminal, 400); } }
+  printTerminal();
+});
+terminal.addEventListener("click", () => terminal.classList.remove("active"));
+
+// Gắn VCard cho Nút Lưu danh bạ (Góc trái)
+function buildVCard(cfg) {
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${cfg.fullName || cfg.name || ""}`, `N:;${cfg.name || ""};;;`];
+  if (cfg.org) lines.push(`ORG:${cfg.org}`);
+  if (cfg.role) lines.push(`TITLE:${cfg.role}`);
+  (cfg.contactInfo || []).forEach((info) => {
+    if (!info.value) return;
+    if (info.type === "mail") lines.push(`EMAIL;TYPE=INTERNET:${info.value}`);
+    if (info.type === "phone") lines.push(`TEL;TYPE=CELL:${info.value}`);
+  });
+  (cfg.links || []).forEach((link) => { if (link.url && link.url !== "#") lines.push(`URL;TYPE=${link.label || link.type}:${link.url}`); });
+  lines.push("END:VCARD"); return lines.join("\r\n");
+}
+const saveBtnTop = document.getElementById("saveContactBtnTop");
+saveBtnTop.href = "data:text/vcard;charset=utf-8," + encodeURIComponent(buildVCard(CONFIG));
+saveBtnTop.setAttribute("target", "_blank"); 
+saveBtnTop.setAttribute("rel", "noopener");
+
+// Sửa lỗi nút Chia sẻ (Góc phải) kèm Fallback an toàn
+document.getElementById("shareBtnTop").addEventListener("click", async (e) => {
+  const shareData = { title: CONFIG.name, text: CONFIG.tagline, url: window.location.href };
+  
+  if (navigator.share) {
+    try { 
+      await navigator.share(shareData); 
+      return; 
+    } catch (err) {
+      // Chỉ bỏ qua nếu người dùng chủ động tắt bảng Share
+    }
+  } 
+  
+  // Nếu máy tính không hỗ trợ share -> Fallback: Tự động copy link
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    const btnSpan = e.currentTarget.querySelector("span");
+    const oldText = btnSpan.textContent;
+    btnSpan.textContent = "Đã copy link!";
+    setTimeout(() => { btnSpan.textContent = oldText; }, 2000);
+  } catch (err) {
+    alert("Trình duyệt không hỗ trợ tự động chia sẻ. Bạn vui lòng copy thủ công thanh địa chỉ nhé!");
+  }
+});
+
+const revealEls = document.querySelectorAll(".reveal");
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add("is-visible"); revealObserver.unobserve(entry.target); } });
+}, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+revealEls.forEach((elx) => revealObserver.observe(elx));
+</script>
+</body>
+</html>
